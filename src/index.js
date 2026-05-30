@@ -41,14 +41,21 @@ client.on('interactionCreate', async (interaction) => {
     await command.execute(interaction);
   } catch (error) {
     console.error(`[Error] Execution failed for command /${interaction.commandName}:`, error);
-    const replyPayload = {
-      content: 'Terjadi kesalahan saat menjalankan perintah ini.',
-      ephemeral: true,
-    };
-    if (interaction.deferred || interaction.replied) {
-      await interaction.followUp(replyPayload);
-    } else {
-      await interaction.reply(replyPayload);
+    
+    // Wrap the error response in a try-catch to prevent crashing the bot
+    // if the interaction token has already expired (e.g. due to lag or startup delay)
+    try {
+      const replyPayload = {
+        content: 'Terjadi kesalahan saat menjalankan perintah ini.',
+        ephemeral: true,
+      };
+      if (interaction.deferred || interaction.replied) {
+        await interaction.followUp(replyPayload);
+      } else {
+        await interaction.reply(replyPayload);
+      }
+    } catch (replyError) {
+      console.error('[Error] Failed to send error response to Discord (interaction might have expired):', replyError);
     }
   }
 });
