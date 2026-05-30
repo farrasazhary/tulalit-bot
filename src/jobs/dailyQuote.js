@@ -51,10 +51,20 @@ export function startDailyQuoteJob(discordClient) {
           .setTimestamp();
 
         // Send Embed with @everyone mention to ping members
-        await channel.send({
+        const message = await channel.send({
           content: '@everyone',
           embeds: [embed],
         });
+
+        // Add default reactions for mood tracking
+        try {
+          await message.react('😊');
+          await message.react('😐');
+          await message.react('😢');
+          await message.react('😡');
+        } catch (reactError) {
+          console.error('[Scheduler Warning] Failed to add reactions for mood tracking:', reactError);
+        }
 
         console.log(`[Scheduler Success] Daily motivation successfully sent to channel "${CHANNEL_ID}": "${quote}"`);
       } catch (error) {

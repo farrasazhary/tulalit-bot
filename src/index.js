@@ -2,6 +2,9 @@ import { Client, GatewayIntentBits, REST, Routes } from 'discord.js';
 import { DISCORD_TOKEN } from './config/env.js';
 import { startDailyQuoteJob } from './jobs/dailyQuote.js';
 import { motivasiCommand } from './commands/motivasi.js';
+import { curhatCommand } from './commands/curhat.js';
+import { confessCommand } from './commands/confess.js';
+import { startWeeklyMoodJob } from './jobs/weeklyMoodReport.js';
 
 // Setup global error handling to prevent silent failure
 process.on('unhandledRejection', (reason, promise) => {
@@ -12,14 +15,20 @@ process.on('uncaughtException', (error) => {
   console.error('[Global Error] Uncaught Exception thrown:', error);
 });
 
-// Initialize the Discord Client
+// Initialize the Discord Client with Guilds, Messages, and Reactions intents
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildMessageReactions,
+  ],
 });
 
 // Map to store registered slash commands
 const commands = new Map();
 commands.set(motivasiCommand.data.name, motivasiCommand);
+commands.set(curhatCommand.data.name, curhatCommand);
+commands.set(confessCommand.data.name, confessCommand);
 
 // Listen for slash command interactions
 client.on('interactionCreate', async (interaction) => {
@@ -66,6 +75,7 @@ client.once('ready', async () => {
   
   // Initialize scheduled jobs
   startDailyQuoteJob(client);
+  startWeeklyMoodJob(client);
 });
 
 // Log in the client

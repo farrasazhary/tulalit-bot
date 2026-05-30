@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 // Load environment variables from .env file
 dotenv.config();
 
-const requiredEnv = ['DISCORD_TOKEN', 'CHANNEL_ID', 'AI_API_KEY'];
+const requiredEnv = ['DISCORD_TOKEN', 'CHANNEL_ID', 'CONFESSION_CHANNEL_ID', 'AI_API_KEY'];
 const missingEnv = [];
 
 for (const key of requiredEnv) {
@@ -29,6 +29,12 @@ export const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
  * @type {string}
  */
 export const CHANNEL_ID = process.env.CHANNEL_ID;
+
+/**
+ * Target Confession Channel ID
+ * @type {string}
+ */
+export const CONFESSION_CHANNEL_ID = process.env.CONFESSION_CHANNEL_ID;
 
 /**
  * Google Gen AI API Key
