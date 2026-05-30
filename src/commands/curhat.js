@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { generateCurhatResponse } from '../services/curhatService.js';
 
 export const curhatCommand = {
@@ -18,7 +18,7 @@ export const curhatCommand = {
    */
   async execute(interaction) {
     // Keep it private (ephemeral) so other users can't see the curhat or the bot's response
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
       const userMessage = interaction.options.getString('pesan');

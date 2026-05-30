@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { CONFESSION_CHANNEL_ID } from '../config/env.js';
 import { getNextConfessionId } from '../services/confessionStore.js';
 
@@ -19,7 +19,7 @@ export const confessCommand = {
    */
   async execute(interaction) {
     // Acknowledge the interaction privately first
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
       const confessionText = interaction.options.getString('pesan');
