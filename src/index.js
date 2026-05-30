@@ -1,6 +1,7 @@
-import { Client, GatewayIntentBits } from 'discord.js';
+import { Client, GatewayIntentBits, REST, Routes } from 'discord.js';
 import { DISCORD_TOKEN } from './config/env.js';
 import { startDailyQuoteJob } from './jobs/dailyQuote.js';
+import { motivasiCommand } from './commands/motivasi.js';
 
 // Setup global error handling to prevent silent failure
 process.on('unhandledRejection', (reason, promise) => {
@@ -16,9 +17,52 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
 
+// Map to store registered slash commands
+const commands = new Map();
+commands.set(motivasiCommand.data.name, motivasiCommand);
+
+// Listen for slash command interactions
+client.on('interactionCreate', async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+
+  const command = commands.get(interaction.commandName);
+  if (!command) return;
+
+  try {
+    await command.execute(interaction);
+  } catch (error) {
+    console.error(`[Error] Execution failed for command /${interaction.commandName}:`, error);
+    const replyPayload = {
+      content: 'Terjadi kesalahan saat menjalankan perintah ini.',
+      ephemeral: true,
+    };
+    if (interaction.deferred || interaction.replied) {
+      await interaction.followUp(replyPayload);
+    } else {
+      await interaction.reply(replyPayload);
+    }
+  }
+});
+
 // On Ready event
-client.once('ready', () => {
+client.once('ready', async () => {
   console.log(`[Discord Bot] Successfully logged in as ${client.user.tag}!`);
+
+  // Register slash commands automatically on startup
+  try {
+    const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
+    console.log('[Discord Bot] Registering global slash commands...');
+    
+    const commandData = Array.from(commands.values()).map(cmd => cmd.data.toJSON());
+    await rest.put(
+      Routes.applicationCommands(client.user.id),
+      { body: commandData }
+    );
+    
+    console.log('[Discord Bot] Successfully registered global slash commands!');
+  } catch (error) {
+    console.error('[Discord Bot] Error registering slash commands:', error);
+  }
   
   // Initialize scheduled jobs
   startDailyQuoteJob(client);
