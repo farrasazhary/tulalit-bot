@@ -47,7 +47,6 @@ export const curhatCommand = {
       console.error('[Slash Command Error] Failed in /curhat:', error);
       await interaction.editReply({
         content: 'Aduh, maaf ya. Tulalit sedang agak pusing, coba kirim curhatannya beberapa saat lagi ya. 🥺',
-        ephemeral: true,
       });
     }
   },

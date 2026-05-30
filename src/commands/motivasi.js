@@ -52,10 +52,9 @@ export const motivasiCommand = {
     } catch (error) {
       console.error('[Slash Command Error] Failed to execute motivasi command:', error);
       
-      // Notify the user about the error (ephemerally so it doesn't clutter the chat)
+      // Notify the user about the error
       await interaction.editReply({
         content: 'Maaf, terjadi kesalahan saat mencoba mendapatkan motivasi. Silakan coba beberapa saat lagi!',
-        ephemeral: true,
       });
     }
   },

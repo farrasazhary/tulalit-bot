@@ -30,7 +30,6 @@ export const confessCommand = {
         console.error(`[Confession Error] Confession channel ID "${CONFESSION_CHANNEL_ID}" not found in Discord cache.`);
         return await interaction.editReply({
           content: 'Waduh, maaf! Channel confession belum disetup dengan benar di bot. Hubungi admin server ya!',
-          ephemeral: true,
         });
       }
 
@@ -54,13 +53,11 @@ export const confessCommand = {
       // Reply to user confirming success
       await interaction.editReply({
         content: `Confession rahasiamu berhasil dikirim ke <#${CONFESSION_CHANNEL_ID}>! 🕊️ (Nomor: #${confessionId})`,
-        ephemeral: true,
       });
     } catch (error) {
       console.error('[Confession Error] Failed to send confession:', error);
       await interaction.editReply({
         content: 'Terjadi kesalahan saat mengirim confession. Pastikan bot memiliki izin menulis di channel confession!',
-        ephemeral: true,
       });
     }
   },
