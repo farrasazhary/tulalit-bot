@@ -4,6 +4,7 @@ import { startDailyQuoteJob } from './jobs/dailyQuote.js';
 import { motivasiCommand } from './commands/motivasi.js';
 import { curhatCommand } from './commands/curhat.js';
 import { confessCommand } from './commands/confess.js';
+import { helpCommand } from './commands/help.js';
 import { startWeeklyMoodJob } from './jobs/weeklyMoodReport.js';
 
 // Setup global error handling to prevent silent failure
@@ -29,6 +30,7 @@ const commands = new Map();
 commands.set(motivasiCommand.data.name, motivasiCommand);
 commands.set(curhatCommand.data.name, curhatCommand);
 commands.set(confessCommand.data.name, confessCommand);
+commands.set(helpCommand.data.name, helpCommand);
 
 // Listen for slash command interactions
 client.on('interactionCreate', async (interaction) => {
