@@ -47,18 +47,25 @@ export const confessCommand = {
       await targetChannel.send({
         embeds: [embed],
       });
-
       console.log(`[Confession Success] Posted confession #${confessionId} anonymously`);
 
       // Reply to user confirming success
+      console.log('[Confess] Attempting to edit reply...');
       await interaction.editReply({
         content: `Confession rahasiamu berhasil dikirim ke <#${CONFESSION_CHANNEL_ID}>! 🕊️ (Nomor: #${confessionId})`,
       });
+      console.log('[Confess] Edit reply successful!');
     } catch (error) {
       console.error('[Confession Error] Failed to send confession:', error);
-      await interaction.editReply({
-        content: 'Terjadi kesalahan saat mengirim confession. Pastikan bot memiliki izin menulis di channel confession!',
-      });
+      try {
+        console.log('[Confess] Attempting to send error message to user...');
+        await interaction.editReply({
+          content: 'Terjadi kesalahan saat mengirim confession. Pastikan bot memiliki izin menulis di channel confession!',
+        });
+        console.log('[Confess] Error message sent successfully!');
+      } catch (replyError) {
+        console.error('[Confess Error] Failed to send error response:', replyError);
+      }
     }
   },
 };
