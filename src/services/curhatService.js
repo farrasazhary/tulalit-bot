@@ -1,23 +1,11 @@
 import { GoogleGenAI } from '@google/genai';
 import { AI_API_KEY } from '../config/env.js';
+import { groqChat } from './groqService.js';
 
 // Initialize the Google Gen AI client with the validated API key
 const ai = new GoogleGenAI({ apiKey: AI_API_KEY });
 
-/**
- * Generates an empathetic, warm, and supportive response to a user's venting (curhat) in Indonesian.
- * Uses gemini-2.5-flash with a therapeutic/counseling system instruction.
- *
- * @param {string} userMessage - The user's vent/curhat text.
- * @returns {Promise<string>} The empathetic AI response.
- */
-export async function generateCurhatResponse(userMessage) {
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: userMessage,
-      config: {
-        systemInstruction: `Anda adalah teman curhat yang sangat hangat, berempati tinggi, peka, dan bijaksana bernama Tulalit. 
+const CURHAT_SYSTEM_PROMPT = `Anda adalah teman curhat yang sangat hangat, berempati tinggi, peka, dan bijaksana bernama Tulalit. 
 
 Tugas Anda adalah mendengarkan keluh kesah pengguna dan memberikan tanggapan yang menenangkan (2-3 paragraf pendek, maksimal 8-10 kalimat secara total). 
 
@@ -27,7 +15,23 @@ Gunakan bahasa Indonesia yang santun, luwes, bersahabat, dan menyejukkan hati. J
 3. Berikan kata-kata penyemangat yang suportif dan tawarkan sudut pandang positif yang realistis tanpa bersikap menggurui atau menghakimi.
 4. Jika curhatan mengarah pada topik melukai diri sendiri, bunuh diri, atau bahaya ekstrem, tetap berikan tanggapan yang hangat dan di akhir pesan sarankan dengan sangat halus serta penuh kasih untuk menghubungi profesional (psikolog/konselor/hotline kesehatan mental).
 
-Tanggapi curhatan mereka secara langsung tanpa basa-basi pengantar seperti "Tentu, ini tanggapannya:". Posisikan diri Anda sebagai sahabat yang selalu ada untuk mereka.`,
+Tanggapi curhatan mereka secara langsung tanpa basa-basi pengantar seperti "Tentu, ini tanggapannya:". Posisikan diri Anda sebagai sahabat yang selalu ada untuk mereka.`;
+
+/**
+ * Generates an empathetic response using Gemini (primary) with Groq fallback.
+ * If Gemini hits rate limit (429), automatically switches to Groq.
+ *
+ * @param {string} userMessage - The user's vent/curhat text.
+ * @returns {Promise<string>} The empathetic AI response.
+ */
+export async function generateCurhatResponse(userMessage) {
+  // ─── PRIMARY: Try Gemini first ───
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: userMessage,
+      config: {
+        systemInstruction: CURHAT_SYSTEM_PROMPT,
       },
     });
 
@@ -36,15 +40,22 @@ Tanggapi curhatan mereka secara langsung tanpa basa-basi pengantar seperti "Tent
     }
 
     throw new Error('Received an empty response from Gemini API for curhat.');
-  } catch (error) {
-    console.error('Failed to generate curhat response via AI API. Details:', error);
+  } catch (geminiError) {
+    console.warn('[Curhat Service] Gemini failed for /curhat. Details:', geminiError.message);
 
-    // Check if error is due to Rate Limit (429 / RESOURCE_EXHAUSTED / quota)
-    const errString = String(error?.message || error || '').toLowerCase();
-    if (errString.includes('429') || errString.includes('resource_exhausted') || errString.includes('quota')) {
-      return 'Tulalit lagi sedikit kewalahan nih karena banyak teman-teman yang curhat berbarengan ☕ Coba tunggu sekitar 1 menit lagi lalu kirim lagi ya! Aku tetap di sini kok. 💙';
+    // ─── FALLBACK: Switch to Groq ───
+    const msg = String(geminiError?.message || '').toLowerCase();
+    if (msg.includes('429') || msg.includes('resource_exhausted') || msg.includes('quota')) {
+      console.log('[Curhat Service] Gemini rate limited. Switching to Groq fallback...');
     }
 
-    return 'Terima kasih banyak sudah mau berbagi cerita denganku. Aku tahu hari-harimu mungkin sedang terasa sangat berat, dan aku di sini untuk mendengarkanmu. Semoga beban di hatimu lekas mereda, ya. Kamu tidak sendirian. 💙';
+    try {
+      const groqResponse = await groqChat(CURHAT_SYSTEM_PROMPT, userMessage);
+      console.log('[Curhat Service] Groq fallback succeeded for /curhat.');
+      return groqResponse;
+    } catch (groqError) {
+      console.error('[Curhat Service] Groq fallback also failed. Details:', groqError.message);
+      return 'Terima kasih banyak sudah mau berbagi cerita denganku. Aku tahu hari-harimu mungkin sedang terasa sangat berat, dan aku di sini untuk mendengarkanmu. Semoga beban di hatimu lekas mereda, ya. Kamu tidak sendirian. 💙';
+    }
   }
 }

@@ -43,6 +43,12 @@ export const CONFESSION_CHANNEL_ID = process.env.CONFESSION_CHANNEL_ID;
 export const AI_API_KEY = process.env.AI_API_KEY;
 
 /**
+ * Groq AI API Key (Fallback AI provider, optional)
+ * @type {string|undefined}
+ */
+export const GROQ_API_KEY = process.env.GROQ_API_KEY || undefined;
+
+/**
  * Web Server Port Configuration
  * @type {number}
  */
