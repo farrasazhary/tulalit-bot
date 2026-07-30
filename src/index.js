@@ -25,6 +25,9 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildMessageReactions,
   ],
+  rest: {
+    timeout: 60000, // Increase REST request timeout to 60s for video file uploads
+  },
 });
 
 // Map to store registered slash commands
