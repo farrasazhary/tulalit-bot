@@ -4,6 +4,22 @@
  */
 
 /**
+ * Cleans tracking parameters from a URL (e.g. ?utm_source=..., &igsh=...).
+ *
+ * @param {string} url
+ * @returns {string} Cleaned URL
+ */
+export function cleanMediaUrl(url) {
+  try {
+    const parsed = new URL(url.trim());
+    parsed.search = '';
+    return parsed.toString();
+  } catch {
+    return url.trim().split('?')[0];
+  }
+}
+
+/**
  * Detects the social media platform from a given URL.
  *
  * @param {string} url
@@ -14,7 +30,7 @@ export function detectPlatform(url) {
   if (lowerUrl.includes('tiktok.com') || lowerUrl.includes('vt.tiktok') || lowerUrl.includes('vm.tiktok')) {
     return 'tiktok';
   }
-  if (lowerUrl.includes('instagram.com') || lowerUrl.includes('instagr.am')) {
+  if (lowerUrl.includes('instagram.com') || lowerUrl.includes('instagr.am') || lowerUrl.includes('vxinstagram.com') || lowerUrl.includes('ddinstagram.com')) {
     return 'instagram';
   }
   if (lowerUrl.includes('facebook.com') || lowerUrl.includes('fb.watch') || lowerUrl.includes('fb.gg')) {
@@ -29,11 +45,11 @@ export function detectPlatform(url) {
 /**
  * Fetches TikTok video details using TikWM API (Fast & No Watermark).
  *
- * @param {string} url
- * @returns {Promise<{ title: string, author: string, videoUrl: string, cover: string }>}
+ * @param {string} cleanUrl
+ * @returns {Promise<{ title: string, author: string, videoUrl: string, cover: string|null }>}
  */
-async function fetchTikTokVideo(url) {
-  const response = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`);
+async function fetchTikTokVideo(cleanUrl) {
+  const response = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(cleanUrl)}`);
   if (!response.ok) {
     throw new Error(`TikWM API HTTP error ${response.status}`);
   }
@@ -53,104 +69,123 @@ async function fetchTikTokVideo(url) {
 }
 
 /**
- * Fetches video details using Cobalt Engine API (Supports IG, FB, Twitter, TikTok fallback).
+ * Extracts shortcode from Instagram URL (e.g. /reel/DbZ8GlbxprA/ or /p/DbZ8GlbxprA/).
  *
  * @param {string} url
+ * @returns {string|null}
+ */
+function extractInstagramShortcode(url) {
+  const match = url.match(/\/(reel|p|reels)\/([A-Za-z0-9_-]+)/);
+  return match ? match[2] : null;
+}
+
+/**
+ * Fetches Instagram Reels/Posts video details using vxinstagram/ddinstagram parser.
+ *
+ * @param {string} cleanUrl
  * @returns {Promise<{ title: string, author: string, videoUrl: string, cover: string|null }>}
  */
-async function fetchCobaltVideo(url) {
-  const response = await fetch('https://api.cobalt.tools/', {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      url: url,
-      videoQuality: '720',
-      downloadMode: 'auto',
-    }),
-  });
+async function fetchInstagramVideo(cleanUrl) {
+  const shortcode = extractInstagramShortcode(cleanUrl);
+  const targets = shortcode
+    ? [`https://vxinstagram.com/reel/${shortcode}/`, `https://ddinstagram.com/reel/${shortcode}/`]
+    : [cleanUrl.replace('instagram.com', 'vxinstagram.com')];
 
-  if (!response.ok) {
-    throw new Error(`Cobalt API HTTP error ${response.status}`);
+  for (const targetUrl of targets) {
+    try {
+      const response = await fetch(targetUrl, {
+        headers: {
+          'User-Agent': 'Discordbot/2.0 (+https://discordapp.com)',
+        },
+      });
+
+      if (!response.ok) continue;
+
+      const html = await response.text();
+
+      // Extract og:video property URL
+      const videoMatch = html.match(/property="og:video"\s+content="([^"]+)"/) ||
+                         html.match(/content="([^"]+)"\s+property="og:video"/);
+
+      if (videoMatch && videoMatch[1]) {
+        const directMp4Url = videoMatch[1].replace(/&amp;/g, '&');
+
+        // Extract title/caption if available
+        const titleMatch = html.match(/property="og:title"\s+content="([^"]+)"/) ||
+                           html.match(/content="([^"]+)"\s+property="og:title"/);
+
+        return {
+          title: titleMatch ? titleMatch[1] : 'Instagram Reel',
+          author: 'Instagram User',
+          videoUrl: directMp4Url,
+          cover: null,
+        };
+      }
+    } catch (e) {
+      console.warn(`[Video Downloader] IG target ${targetUrl} failed:`, e.message);
+    }
   }
 
-  const data = await response.json();
-
-  if (data?.status === 'stream' || data?.status === 'redirect') {
-    return {
-      title: data.filename || 'Social Media Video',
-      author: 'Media Downloader',
-      videoUrl: data.url,
-      cover: null,
-    };
-  }
-
-  if (data?.status === 'picker' && Array.isArray(data?.picker) && data.picker.length > 0) {
-    const videoItem = data.picker.find(item => item.type === 'video') || data.picker[0];
-    return {
-      title: data.filename || 'Social Media Video',
-      author: 'Media Downloader',
-      videoUrl: videoItem.url,
-      cover: videoItem.thumb || null,
-    };
-  }
-
-  throw new Error(data?.text || 'Gagal mengekstrak video via Cobalt API.');
+  throw new Error('Gagal mengekstrak video Instagram dari link tersebut. Pastikan link publik!');
 }
 
 /**
  * Main function to resolve video download details.
  *
- * @param {string} url - The video URL submitted by user.
+ * @param {string} rawUrl - The video URL submitted by user.
  * @returns {Promise<{ success: boolean, platform: string, title: string, author: string, videoUrl: string, cover?: string }>}
  */
-export async function downloadVideo(url) {
-  const platform = detectPlatform(url);
+export async function downloadVideo(rawUrl) {
+  const cleanUrl = cleanMediaUrl(rawUrl);
+  const platform = detectPlatform(cleanUrl);
 
-  // 1. Try TikTok dedicated API first
+  // 1. TikTok Handler
   if (platform === 'tiktok') {
     try {
-      const result = await fetchTikTokVideo(url);
+      const result = await fetchTikTokVideo(cleanUrl);
       return { success: true, platform: 'TikTok (No WM)', ...result };
     } catch (tikTokError) {
-      console.warn('[Video Downloader] TikWM failed, trying Cobalt fallback...', tikTokError.message);
+      console.warn('[Video Downloader] TikWM failed, trying fallback...', tikTokError.message);
+      
+      // Secondary TikTok fallback
+      try {
+        const response = await fetch(`https://api.tiklydown.eu.org/api/download?url=${encodeURIComponent(cleanUrl)}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data?.video?.noWatermark) {
+            return {
+              success: true,
+              platform: 'TikTok (No WM)',
+              title: data.title || 'TikTok Video',
+              author: data.author?.name || 'TikTok User',
+              videoUrl: data.video.noWatermark,
+              cover: data.cover || null,
+            };
+          }
+        }
+      } catch (e) {
+        console.error('[Video Downloader] TikTok fallback failed:', e.message);
+      }
     }
   }
 
-  // 2. Try Cobalt API for IG, FB, Twitter, or TikTok fallback
+  // 2. Instagram Handler
+  if (platform === 'instagram') {
+    try {
+      const result = await fetchInstagramVideo(cleanUrl);
+      return { success: true, platform: 'Instagram Reels', ...result };
+    } catch (igError) {
+      console.error('[Video Downloader] Instagram extraction failed:', igError.message);
+    }
+  }
+
+  // 3. Fallback / General Handler for FB, Twitter, or others
   try {
-    const result = await fetchCobaltVideo(url);
-    const platformName = platform === 'instagram' ? 'Instagram' :
-                         platform === 'facebook' ? 'Facebook' :
+    const result = await fetchInstagramVideo(cleanUrl);
+    const platformName = platform === 'facebook' ? 'Facebook' :
                          platform === 'twitter' ? 'Twitter/X' : 'Social Media';
     return { success: true, platform: platformName, ...result };
-  } catch (cobaltError) {
-    console.error('[Video Downloader] Cobalt extraction failed:', cobaltError.message);
+  } catch (error) {
+    throw new Error('Gagal mengekstrak video dari link tersebut. Pastikan link video publik dan valid!');
   }
-
-  // 3. Fallback for TikTok if Cobalt also failed (try secondary proxy)
-  if (platform === 'tiktok') {
-    try {
-      const response = await fetch(`https://api.tiklydown.eu.org/api/download?url=${encodeURIComponent(url)}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data?.video?.noWatermark) {
-          return {
-            success: true,
-            platform: 'TikTok (No WM)',
-            title: data.title || 'TikTok Video',
-            author: data.author?.name || 'TikTok User',
-            videoUrl: data.video.noWatermark,
-            cover: data.cover || null,
-          };
-        }
-      }
-    } catch (e) {
-      console.error('[Video Downloader] Secondary TikTok fallback failed:', e.message);
-    }
-  }
-
-  throw new Error('Gagal mengekstrak video dari link tersebut. Pastikan link publik dan valid!');
 }
