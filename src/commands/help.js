@@ -34,13 +34,18 @@ export const helpCommand = {
         },
         {
           name: '🎬 /download <url>',
-          value: '> Download video **TikTok** (tanpa watermark), **Instagram Reels**, **Facebook**, atau **Twitter**.\n> *Contoh:* `/download url: https://vt.tiktok.com/...`',
+          value: '> Download video **TikTok** (tanpa watermark), **Instagram Reels**, **Facebook**, atau **Twitter**.\n> 💡 *Video <= 25MB diputar langsung di chat Discord. Video > 25MB / server sibuk disajikan via tombol Download HD.*\n> *Contoh:* `/download url: https://vt.tiktok.com/...`',
+        },
+        {
+          name: 'ℹ️ /about',
+          value: '> Tampilkan informasi pengenal & mengenai bot Tulalit.',
         },
         {
           name: '❓ /help',
-          value: '> Menampilkan panduan ini.',
+          value: '> Menampilkan panduan lengkap ini.',
         }
       )
+      .setFooter({ text: 'Tulalit Bot • Teman Virtual Server Discord Kamu 🤖' })
       .setTimestamp();
 
     await interaction.reply({

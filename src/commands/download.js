@@ -89,7 +89,7 @@ export const downloadCommand = {
           const embed = new EmbedBuilder()
             .setColor('#FF9F43')
             .setTitle(`🎬 ${info.platform} Downloader`)
-            .setDescription(`**${info.title.length > 200 ? info.title.slice(0, 197) + '...' : info.title}**\n\n> 👤 **Author:** ${info.author}\n> 📦 **Ukuran:** ${(buffer.length / (1024 * 1024)).toFixed(2)} MB`)
+            .setDescription(`**${info.title.length > 200 ? info.title.slice(0, 197) + '...' : info.title}**\n\n> 👤 **Author:** ${info.author}\n> 📦 **Ukuran:** ${(buffer.length / (1024 * 1024)).toFixed(2)} MB\n\n💡 *Video diputar langsung di Discord (Ukuran <= 25MB).*`)
             .setTimestamp();
 
           if (info.cover) {
@@ -111,7 +111,7 @@ export const downloadCommand = {
       const embed = new EmbedBuilder()
         .setColor('#FF9F43')
         .setTitle(`🎬 ${info.platform} Downloader`)
-        .setDescription(`**${info.title}**\n\n📦 **Ukuran:** ${sizeText}\nKlik tombol di bawah untuk mengunduh video HD secara langsung!`)
+        .setDescription(`**${info.title}**\n\n> 📦 **Ukuran:** ${sizeText}\n\n💡 *Disajikan via tombol Download HD agar dapat diputar/diunduh dengan cepat.*\nKlik tombol di bawah ini untuk memutar / mengunduh video!`)
         .setTimestamp();
 
       const downloadButton = new ButtonBuilder()
