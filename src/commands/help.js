@@ -33,6 +33,10 @@ export const helpCommand = {
           value: '> Setiap pagi jam 07:00 WIB, Tulalit mengirim quotes harian dengan 4 emoji reaksi.\n> Klik emoji yang sesuai mood kamu: 😊 😐 😢 😡\n> Setiap **Minggu malam jam 20:00**, Tulalit akan merangkum mood mingguan server!',
         },
         {
+          name: '🎬 /download <url>',
+          value: '> Download video **TikTok** (tanpa watermark), **Instagram Reels**, **Facebook**, atau **Twitter**.\n> *Contoh:* `/download url: https://vt.tiktok.com/...`',
+        },
+        {
           name: '❓ /help',
           value: '> Menampilkan panduan ini.',
         }
