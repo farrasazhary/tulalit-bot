@@ -42,32 +42,46 @@ export const downloadCommand = {
       // Resolve video download details
       const info = await downloadVideo(rawUrl);
 
-      // Fetch the video file to check size and create buffer
-      let videoResponse = await fetch(info.videoUrl);
+      let buffer = null;
 
-      // Fallback for Instagram if primary offload fails
-      if (!videoResponse.ok && info.shortcode) {
-        const fallbackUrl = `https://ddinstagram.com/videos/${info.shortcode}/1.mp4`;
+      // Only attempt downloading stream buffer if direct link is available
+      if (info.isDirectLink !== false) {
         try {
-          const fallbackRes = await fetch(fallbackUrl);
-          if (fallbackRes.ok) {
-            videoResponse = fallbackRes;
-            info.videoUrl = fallbackUrl;
+          let videoResponse = await fetch(info.videoUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            },
+          });
+
+          // Fallback for Instagram if primary offload URL returned non-200
+          if (!videoResponse.ok && info.shortcode) {
+            const fallbackUrl = `https://ddinstagram.com/videos/${info.shortcode}/1.mp4`;
+            try {
+              const fallbackRes = await fetch(fallbackUrl, {
+                headers: {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+                },
+              });
+              if (fallbackRes.ok) {
+                videoResponse = fallbackRes;
+                info.videoUrl = fallbackUrl;
+              }
+            } catch (e) {
+              console.warn('[Download Command] Fallback fetch failed:', e.message);
+            }
           }
-        } catch (e) {
-          console.warn('[Download Command] Fallback fetch failed:', e.message);
+
+          if (videoResponse.ok) {
+            const arrayBuffer = await videoResponse.arrayBuffer();
+            buffer = Buffer.from(arrayBuffer);
+          }
+        } catch (fetchErr) {
+          console.warn('[Download Command] Buffer fetch failed, using button fallback:', fetchErr.message);
         }
       }
-
-      if (!videoResponse.ok) {
-        throw new Error(`Gagal mengunduh berkas media (HTTP ${videoResponse.status}).`);
-      }
-
-      const arrayBuffer = await videoResponse.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
       const MAX_DISCORD_SIZE = 25 * 1024 * 1024; // 25 MB
 
-      if (buffer.length <= MAX_DISCORD_SIZE && buffer.length > 0) {
+      if (buffer && buffer.length <= MAX_DISCORD_SIZE && buffer.length > 0) {
         // Under 25MB limit: Try attaching directly to Discord message
         try {
           const attachment = new AttachmentBuilder(buffer, { name: 'tulalit-video.mp4' });
@@ -93,10 +107,11 @@ export const downloadCommand = {
       }
 
       // Over 25MB limit OR upload fallback: Provide direct download link button
+      const sizeText = buffer ? `${(buffer.length / (1024 * 1024)).toFixed(2)} MB` : 'HD Media';
       const embed = new EmbedBuilder()
         .setColor('#FF9F43')
         .setTitle(`🎬 ${info.platform} Downloader`)
-        .setDescription(`**${info.title}**\n\n📦 **Ukuran:** ${(buffer.length / (1024 * 1024)).toFixed(2)} MB\nKlik tombol di bawah untuk mengunduh video HD secara langsung!`)
+        .setDescription(`**${info.title}**\n\n📦 **Ukuran:** ${sizeText}\nKlik tombol di bawah untuk mengunduh video HD secara langsung!`)
         .setTimestamp();
 
       const downloadButton = new ButtonBuilder()

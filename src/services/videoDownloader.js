@@ -3,6 +3,8 @@
  * Resolves direct MP4 video URLs and metadata for TikTok (no watermark), Instagram, Facebook, and Twitter.
  */
 
+const BROWSER_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36';
+
 /**
  * Cleans tracking parameters from a URL (e.g. ?utm_source=..., &igsh=...).
  *
@@ -46,7 +48,7 @@ export function detectPlatform(url) {
  * Fetches TikTok video details using TikWM API (Fast & No Watermark).
  *
  * @param {string} cleanUrl
- * @returns {Promise<{ title: string, author: string, videoUrl: string, cover: string|null }>}
+ * @returns {Promise<{ title: string, author: string, videoUrl: string, cover: string|null, isDirectLink?: boolean }>}
  */
 async function fetchTikTokVideo(cleanUrl) {
   const response = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(cleanUrl)}`);
@@ -62,6 +64,7 @@ async function fetchTikTokVideo(cleanUrl) {
       author: data.data.author?.nickname || data.data.author?.unique_id || 'TikTok User',
       videoUrl: playUrl,
       cover: data.data.cover || null,
+      isDirectLink: true,
     };
   }
 
@@ -80,32 +83,59 @@ export function extractInstagramShortcode(url) {
 }
 
 /**
- * Fetches Instagram Reels/Posts video details using instant shortcode offload.
+ * Fetches Instagram Reels/Posts video details with multi-candidate checks and safe fallback.
  *
  * @param {string} cleanUrl
- * @returns {Promise<{ title: string, author: string, videoUrl: string, cover: string|null }>}
+ * @returns {Promise<{ title: string, author: string, videoUrl: string, cover: string|null, isDirectLink: boolean, shortcode: string|null }>}
  */
 async function fetchInstagramVideo(cleanUrl) {
   const shortcode = extractInstagramShortcode(cleanUrl);
 
+  // 1. Check direct offload stream candidates
   if (shortcode) {
-    // Return direct offload MP4 stream URL directly without redundant pre-HEAD checks
-    return {
-      title: 'Instagram Reel',
-      author: 'Instagram User',
-      videoUrl: `https://vxinstagram.com/offload/${shortcode}/0.mp4`,
-      shortcode,
-      cover: null,
-    };
+    const candidates = [
+      `https://vxinstagram.com/offload/${shortcode}/0.mp4`,
+      `https://ddinstagram.com/videos/${shortcode}/1.mp4`,
+      `https://vxinstagram.com/offload/${shortcode}/1.mp4`,
+    ];
+
+    for (const cand of candidates) {
+      try {
+        const res = await fetch(cand, {
+          headers: { 'User-Agent': BROWSER_USER_AGENT },
+        });
+
+        if (res.ok) {
+          const cType = res.headers.get('content-type') || '';
+          const cLen = Number(res.headers.get('content-length') || 0);
+
+          if (cType.includes('video') || cType.includes('octet-stream') || cLen > 1000) {
+            return {
+              title: 'Instagram Reel',
+              author: 'Instagram User',
+              videoUrl: cand,
+              cover: null,
+              isDirectLink: true,
+              shortcode,
+            };
+          }
+        }
+      } catch (e) {
+        console.warn('[Video Downloader] Offload candidate failed:', cand, e.message);
+      }
+    }
   }
 
-  // Fallback if no shortcode detected
-  const targets = [
-    cleanUrl.replace('instagram.com', 'vxinstagram.com'),
-    cleanUrl.replace('instagram.com', 'ddinstagram.com'),
-  ];
+  // 2. Scraping Fallback from vxinstagram / ddinstagram / kkinstagram HTML
+  const scrapeTargets = shortcode
+    ? [
+        `https://vxinstagram.com/reel/${shortcode}/`,
+        `https://ddinstagram.com/reel/${shortcode}/`,
+        `https://kkinstagram.com/reel/${shortcode}/`,
+      ]
+    : [cleanUrl.replace('instagram.com', 'vxinstagram.com')];
 
-  for (const targetUrl of targets) {
+  for (const targetUrl of scrapeTargets) {
     try {
       const response = await fetch(targetUrl, {
         headers: {
@@ -131,11 +161,25 @@ async function fetchInstagramVideo(cleanUrl) {
           author: 'Instagram User',
           videoUrl: directMp4Url,
           cover: null,
+          isDirectLink: true,
+          shortcode,
         };
       }
     } catch (e) {
-      console.warn(`[Video Downloader] IG target ${targetUrl} failed:`, e.message);
+      console.warn(`[Video Downloader] IG scrape target ${targetUrl} failed:`, e.message);
     }
+  }
+
+  // 3. Non-failing fallback button link if direct MP4 stream could not be extracted
+  if (shortcode) {
+    return {
+      title: 'Instagram Reel',
+      author: 'Instagram User',
+      videoUrl: `https://vxinstagram.com/reel/${shortcode}/`,
+      cover: null,
+      isDirectLink: false,
+      shortcode,
+    };
   }
 
   throw new Error('Gagal mengekstrak video Instagram dari link tersebut. Pastikan link publik!');
@@ -145,7 +189,7 @@ async function fetchInstagramVideo(cleanUrl) {
  * Main function to resolve video download details.
  *
  * @param {string} rawUrl - The video URL submitted by user.
- * @returns {Promise<{ success: boolean, platform: string, title: string, author: string, videoUrl: string, cover?: string }>}
+ * @returns {Promise<{ success: boolean, platform: string, title: string, author: string, videoUrl: string, cover?: string, isDirectLink?: boolean, shortcode?: string }>}
  */
 export async function downloadVideo(rawUrl) {
   const cleanUrl = cleanMediaUrl(rawUrl);
@@ -172,6 +216,7 @@ export async function downloadVideo(rawUrl) {
               author: data.author?.name || 'TikTok User',
               videoUrl: data.video.noWatermark,
               cover: data.cover || null,
+              isDirectLink: true,
             };
           }
         }
