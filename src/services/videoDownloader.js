@@ -69,26 +69,51 @@ async function fetchTikTokVideo(cleanUrl) {
 }
 
 /**
- * Extracts shortcode from Instagram URL (e.g. /reel/DbZ8GlbxprA/ or /p/DbZ8GlbxprA/).
+ * Extracts shortcode from Instagram URL (e.g. /reel/DbNW_yvTYe9/ or /p/DbNW_yvTYe9/ or /share/reel/DbNW_yvTYe9/).
  *
  * @param {string} url
  * @returns {string|null}
  */
-function extractInstagramShortcode(url) {
-  const match = url.match(/\/(reel|p|reels)\/([A-Za-z0-9_-]+)/);
+export function extractInstagramShortcode(url) {
+  const match = url.match(/\/(reel|reels|p|share\/reel|tv)\/([A-Za-z0-9_-]+)/i);
   return match ? match[2] : null;
 }
 
 /**
- * Fetches Instagram Reels/Posts video details using vxinstagram/ddinstagram parser.
+ * Fetches Instagram Reels/Posts video details using direct offload + multi-provider fallback.
  *
  * @param {string} cleanUrl
  * @returns {Promise<{ title: string, author: string, videoUrl: string, cover: string|null }>}
  */
 async function fetchInstagramVideo(cleanUrl) {
   const shortcode = extractInstagramShortcode(cleanUrl);
+
+  // 1. Direct Shortcode Offload Stream (Fastest & Most Reliable)
+  if (shortcode) {
+    const directOffloadUrl = `https://vxinstagram.com/offload/${shortcode}/0.mp4`;
+    try {
+      const headCheck = await fetch(directOffloadUrl, { method: 'HEAD' });
+      if (headCheck.ok) {
+        return {
+          title: 'Instagram Reel',
+          author: 'Instagram User',
+          videoUrl: directOffloadUrl,
+          cover: null,
+        };
+      }
+    } catch (e) {
+      console.warn('[Video Downloader] Direct offload HEAD check failed:', e.message);
+    }
+  }
+
+  // 2. Multi-Provider Scraping Fallback
   const targets = shortcode
-    ? [`https://vxinstagram.com/reel/${shortcode}/`, `https://ddinstagram.com/reel/${shortcode}/`]
+    ? [
+        `https://vxinstagram.com/reel/${shortcode}/`,
+        `https://ddinstagram.com/reel/${shortcode}/`,
+        `https://kkinstagram.com/reel/${shortcode}/`,
+        `https://instagrs.com/reel/${shortcode}/`,
+      ]
     : [cleanUrl.replace('instagram.com', 'vxinstagram.com')];
 
   for (const targetUrl of targets) {
