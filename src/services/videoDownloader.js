@@ -69,7 +69,7 @@ async function fetchTikTokVideo(cleanUrl) {
 }
 
 /**
- * Extracts shortcode from Instagram URL (e.g. /reel/DbNW_yvTYe9/ or /p/DbNW_yvTYe9/ or /share/reel/DbNW_yvTYe9/).
+ * Extracts shortcode from Instagram URL (e.g. /reel/DZ-8RoJTYgv/ or /p/DZbxPPjTqHe/ or /share/reel/...).
  *
  * @param {string} url
  * @returns {string|null}
@@ -80,7 +80,7 @@ export function extractInstagramShortcode(url) {
 }
 
 /**
- * Fetches Instagram Reels/Posts video details using direct offload + multi-provider fallback.
+ * Fetches Instagram Reels/Posts video details using instant shortcode offload.
  *
  * @param {string} cleanUrl
  * @returns {Promise<{ title: string, author: string, videoUrl: string, cover: string|null }>}
@@ -88,33 +88,22 @@ export function extractInstagramShortcode(url) {
 async function fetchInstagramVideo(cleanUrl) {
   const shortcode = extractInstagramShortcode(cleanUrl);
 
-  // 1. Direct Shortcode Offload Stream (Fastest & Most Reliable)
   if (shortcode) {
-    const directOffloadUrl = `https://vxinstagram.com/offload/${shortcode}/0.mp4`;
-    try {
-      const headCheck = await fetch(directOffloadUrl, { method: 'HEAD' });
-      if (headCheck.ok) {
-        return {
-          title: 'Instagram Reel',
-          author: 'Instagram User',
-          videoUrl: directOffloadUrl,
-          cover: null,
-        };
-      }
-    } catch (e) {
-      console.warn('[Video Downloader] Direct offload HEAD check failed:', e.message);
-    }
+    // Return direct offload MP4 stream URL directly without redundant pre-HEAD checks
+    return {
+      title: 'Instagram Reel',
+      author: 'Instagram User',
+      videoUrl: `https://vxinstagram.com/offload/${shortcode}/0.mp4`,
+      shortcode,
+      cover: null,
+    };
   }
 
-  // 2. Multi-Provider Scraping Fallback
-  const targets = shortcode
-    ? [
-        `https://vxinstagram.com/reel/${shortcode}/`,
-        `https://ddinstagram.com/reel/${shortcode}/`,
-        `https://kkinstagram.com/reel/${shortcode}/`,
-        `https://instagrs.com/reel/${shortcode}/`,
-      ]
-    : [cleanUrl.replace('instagram.com', 'vxinstagram.com')];
+  // Fallback if no shortcode detected
+  const targets = [
+    cleanUrl.replace('instagram.com', 'vxinstagram.com'),
+    cleanUrl.replace('instagram.com', 'ddinstagram.com'),
+  ];
 
   for (const targetUrl of targets) {
     try {
@@ -134,8 +123,6 @@ async function fetchInstagramVideo(cleanUrl) {
 
       if (videoMatch && videoMatch[1]) {
         const directMp4Url = videoMatch[1].replace(/&amp;/g, '&');
-
-        // Extract title/caption if available
         const titleMatch = html.match(/property="og:title"\s+content="([^"]+)"/) ||
                            html.match(/content="([^"]+)"\s+property="og:title"/);
 

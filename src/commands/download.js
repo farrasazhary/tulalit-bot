@@ -43,7 +43,22 @@ export const downloadCommand = {
       const info = await downloadVideo(rawUrl);
 
       // Fetch the video file to check size and create buffer
-      const videoResponse = await fetch(info.videoUrl);
+      let videoResponse = await fetch(info.videoUrl);
+
+      // Fallback for Instagram if primary offload fails
+      if (!videoResponse.ok && info.shortcode) {
+        const fallbackUrl = `https://ddinstagram.com/videos/${info.shortcode}/1.mp4`;
+        try {
+          const fallbackRes = await fetch(fallbackUrl);
+          if (fallbackRes.ok) {
+            videoResponse = fallbackRes;
+            info.videoUrl = fallbackUrl;
+          }
+        } catch (e) {
+          console.warn('[Download Command] Fallback fetch failed:', e.message);
+        }
+      }
+
       if (!videoResponse.ok) {
         throw new Error(`Gagal mengunduh berkas media (HTTP ${videoResponse.status}).`);
       }
