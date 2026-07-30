@@ -4,6 +4,7 @@
  */
 
 const BROWSER_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36';
+const BOT_USER_AGENT = 'TelegramBot (like TwitterBot/1.0)';
 
 /**
  * Cleans tracking parameters from a URL (e.g. ?utm_source=..., &igsh=...).
@@ -91,7 +92,7 @@ export function extractInstagramShortcode(url) {
 async function fetchInstagramVideo(cleanUrl) {
   const shortcode = extractInstagramShortcode(cleanUrl);
 
-  // 1. Check direct offload stream candidates
+  // 1. Direct shortcode offload stream candidates
   if (shortcode) {
     const candidates = [
       `https://vxinstagram.com/offload/${shortcode}/0.mp4`,
@@ -102,12 +103,16 @@ async function fetchInstagramVideo(cleanUrl) {
     for (const cand of candidates) {
       try {
         const res = await fetch(cand, {
-          headers: { 'User-Agent': BROWSER_USER_AGENT },
+          method: 'GET',
+          headers: {
+            'User-Agent': BROWSER_USER_AGENT,
+            'Range': 'bytes=0-1024',
+          },
         });
 
-        if (res.ok) {
+        if (res.ok || res.status === 206) {
           const cType = res.headers.get('content-type') || '';
-          const cLen = Number(res.headers.get('content-length') || 0);
+          const cLen = Number(res.headers.get('content-length') || res.headers.get('content-range')?.split('/')[1] || 0);
 
           if (cType.includes('video') || cType.includes('octet-stream') || cLen > 1000) {
             return {
@@ -121,7 +126,7 @@ async function fetchInstagramVideo(cleanUrl) {
           }
         }
       } catch (e) {
-        console.warn('[Video Downloader] Offload candidate failed:', cand, e.message);
+        console.warn('[Video Downloader] Offload candidate check failed:', cand, e.message);
       }
     }
   }
@@ -129,8 +134,8 @@ async function fetchInstagramVideo(cleanUrl) {
   // 2. Scraping Fallback from vxinstagram / ddinstagram / kkinstagram HTML
   const scrapeTargets = shortcode
     ? [
-        `https://vxinstagram.com/reel/${shortcode}/`,
         `https://ddinstagram.com/reel/${shortcode}/`,
+        `https://vxinstagram.com/reel/${shortcode}/`,
         `https://kkinstagram.com/reel/${shortcode}/`,
       ]
     : [cleanUrl.replace('instagram.com', 'vxinstagram.com')];
@@ -139,7 +144,7 @@ async function fetchInstagramVideo(cleanUrl) {
     try {
       const response = await fetch(targetUrl, {
         headers: {
-          'User-Agent': 'Discordbot/2.0 (+https://discordapp.com)',
+          'User-Agent': BOT_USER_AGENT,
         },
       });
 
