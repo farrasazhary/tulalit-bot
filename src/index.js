@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, REST, Routes } from 'discord.js';
+import { Client, GatewayIntentBits, REST, Routes, MessageFlags } from 'discord.js';
 import { DISCORD_TOKEN } from './config/env.js';
 import { startDailyQuoteJob } from './jobs/dailyQuote.js';
 import { motivasiCommand } from './commands/motivasi.js';
@@ -33,12 +33,31 @@ commands.set(curhatCommand.data.name, curhatCommand);
 commands.set(confessCommand.data.name, confessCommand);
 commands.set(helpCommand.data.name, helpCommand);
 
+// Per-user cooldown map (3 seconds cooldown)
+const cooldowns = new Map();
+const COOLDOWN_MS = 3000;
+
 // Listen for slash command interactions
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
   const command = commands.get(interaction.commandName);
   if (!command) return;
+
+  // Rate Limiting / Cooldown Check per user
+  const userId = interaction.user.id;
+  const now = Date.now();
+  const lastTime = cooldowns.get(userId);
+
+  if (lastTime && now - lastTime < COOLDOWN_MS) {
+    const remainingSeconds = Math.ceil((COOLDOWN_MS - (now - lastTime)) / 1000);
+    return interaction.reply({
+      content: `⏳ Pelan-pelan bro! Tunggu **${remainingSeconds} detik** lagi sebelum memakai perintah bot ya.`,
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+
+  cooldowns.set(userId, now);
 
   try {
     await command.execute(interaction);

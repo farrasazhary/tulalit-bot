@@ -28,7 +28,14 @@ export async function generateMotivation(theme = 'kerja keras dan disiplin') {
 
     throw new Error('Received an empty response from Gemini API.');
   } catch (error) {
-    console.error('Failed to generate motivation via AI API. Using fallback message. Details:', error);
+    console.error('Failed to generate motivation via AI API. Details:', error);
+    
+    // Check if error is due to Rate Limit (429 / RESOURCE_EXHAUSTED / quota)
+    const errString = String(error?.message || error || '').toLowerCase();
+    if (errString.includes('429') || errString.includes('resource_exhausted') || errString.includes('quota')) {
+      return 'Tulalit lagi sedikit kewalahan nih karena permintaan motivasi sedang tinggi ☕ Coba tunggu sekitar 1 menit lagi ya! 🚀';
+    }
+
     return 'Tetap semangat dan teruslah melangkah, konsistensi adalah kunci. 🚀';
   }
 }

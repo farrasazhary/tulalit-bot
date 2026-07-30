@@ -38,6 +38,13 @@ Tanggapi curhatan mereka secara langsung tanpa basa-basi pengantar seperti "Tent
     throw new Error('Received an empty response from Gemini API for curhat.');
   } catch (error) {
     console.error('Failed to generate curhat response via AI API. Details:', error);
+
+    // Check if error is due to Rate Limit (429 / RESOURCE_EXHAUSTED / quota)
+    const errString = String(error?.message || error || '').toLowerCase();
+    if (errString.includes('429') || errString.includes('resource_exhausted') || errString.includes('quota')) {
+      return 'Tulalit lagi sedikit kewalahan nih karena banyak teman-teman yang curhat berbarengan ☕ Coba tunggu sekitar 1 menit lagi lalu kirim lagi ya! Aku tetap di sini kok. 💙';
+    }
+
     return 'Terima kasih banyak sudah mau berbagi cerita denganku. Aku tahu hari-harimu mungkin sedang terasa sangat berat, dan aku di sini untuk mendengarkanmu. Semoga beban di hatimu lekas mereda, ya. Kamu tidak sendirian. 💙';
   }
 }
