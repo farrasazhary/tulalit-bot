@@ -41,3 +41,10 @@ export const CONFESSION_CHANNEL_ID = process.env.CONFESSION_CHANNEL_ID;
  * @type {string}
  */
 export const AI_API_KEY = process.env.AI_API_KEY;
+
+/**
+ * Web Server Port Configuration
+ * @type {number}
+ */
+export const PORT = parseInt(process.env.PORT || '3005', 10);
+

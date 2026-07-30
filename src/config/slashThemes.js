@@ -69,5 +69,5 @@ export const SLASH_THEME_CHOICES = [
   { name: '🚀 Keluar dari Zona Nyaman', value: SLASH_THEMES.zona_nyaman },
   { name: '🔥 Konsistensi & Kedisiplinan', value: SLASH_THEMES.konsistensi },
   { name: '🙏 Rasa Bersyukur', value: SLASH_THEMES.bersyukur },
-  { name: '🏠 Kemandirian & Merantau', value: SLASH_THEMES.kemandirian },
+  { name: '🏠 Kemandirian', value: SLASH_THEMES.kemandirian },
 ];

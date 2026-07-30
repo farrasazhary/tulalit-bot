@@ -6,6 +6,7 @@ import { curhatCommand } from './commands/curhat.js';
 import { confessCommand } from './commands/confess.js';
 import { helpCommand } from './commands/help.js';
 import { startWeeklyMoodJob } from './jobs/weeklyMoodReport.js';
+import { startWebServer } from './services/webServer.js';
 
 // Setup global error handling to prevent silent failure
 process.on('unhandledRejection', (reason, promise) => {
@@ -82,9 +83,10 @@ client.once('ready', async () => {
     console.error('[Discord Bot] Error registering slash commands:', error);
   }
   
-  // Initialize scheduled jobs
+  // Initialize scheduled jobs & web status server
   startDailyQuoteJob(client);
   startWeeklyMoodJob(client);
+  startWebServer(client);
 });
 
 // Log in the client
