@@ -122,3 +122,130 @@ export async function generateMealReminder(userName, mealType = 'Makan Siang') {
   }
 }
 
+const BATH_REMINDER_SYSTEM_PROMPT = `Anda adalah bot Discord bernama Tulalit yang kocak, asyik, dan suka meroasting/mengingatkan orang yang malas mandi dengan cara yang lucu, menghibur, dan ramah.
+
+Tugas Anda:
+Buatkan pesan pengingat mandi yang kocak untuk target.
+Aturan:
+1. Sebutkan nama target.
+2. Jika ada nama pengirim yang berbeda, sebutkan bahwa si pengirim yang meminta atau yang mencium aroma malas mandi si target.
+3. Buat lelucon santai tentang bau kasur, keringat push rank, bau matahari, sabunan yang bersih, atau air segar.
+4. Gunakan bahasa Indonesia santai/gaul anak muda yang natural, 2-3 kalimat pendek, dan sertakan emoji yang relevan (🚿, 🧼, 🛁).
+5. Jangan berikan kata pengantar, langsung berikan teks pesannya.`;
+
+/**
+ * Generates a humorous AI bath reminder for a target user with Gemini (primary) and Groq fallback.
+ *
+ * @param {string} targetName - Name of the person to be reminded to take a bath.
+ * @param {string|null} callerName - Name of the person requesting the reminder (if different from target).
+ * @param {string} [bathType='Mandi Sore'] - Time context (Mandi Pagi, Mandi Sore, Mandi Malam).
+ * @returns {Promise<string>} The generated bath reminder text.
+ */
+export async function generateBathReminder(targetName, callerName = null, bathType = 'Mandi Sore') {
+  const isSelf = !callerName || callerName === targetName;
+  const userPrompt = isSelf
+    ? `Buatkan roasting/pengingat untuk ${targetName} agar segera ${bathType} karena sudah mager dan bau kasur.`
+    : `Buatkan roasting/pengingat untuk ${targetName} dari ${callerName} agar segera ${bathType} karena aroma push rank-nya udah kecium.`;
+
+  // ─── PRIMARY: Try Gemini first ───
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: userPrompt,
+      config: {
+        systemInstruction: `${BATH_REMINDER_SYSTEM_PROMPT} Konteks: ${bathType}.`,
+      },
+    });
+
+    if (response && response.text) {
+      return response.text.trim();
+    }
+
+    throw new Error('Received an empty response from Gemini API.');
+  } catch (geminiError) {
+    console.warn('[AI Service] Gemini failed for /ingatmandi. Details:', geminiError.message);
+
+    if (isRateLimitError(geminiError)) {
+      console.log('[AI Service] Gemini rate limited. Switching to Groq fallback...');
+    }
+
+    try {
+      const groqResponse = await groqChat(
+        `${BATH_REMINDER_SYSTEM_PROMPT} Konteks: ${bathType}.`,
+        userPrompt
+      );
+      console.log('[AI Service] Groq fallback succeeded for /ingatmandi.');
+      return groqResponse;
+    } catch (groqError) {
+      console.error('[AI Service] Groq fallback also failed. Details:', groqError.message);
+      return isSelf
+        ? `Woy ${targetName}! Kasur lo udah mulai lengket tuh dari tadi rebahan mulu. Buruan ${bathType} sana biar wangi dan segeran dikit! 🧼🚿`
+        : `Woy ${targetName}! Kata ${callerName} aroma push rank dan kasur lo udah kecium sampe sini. Buruan ${bathType} sana, sabunan yang bersih! 🧼🚿`;
+    }
+  }
+}
+
+const SLEEP_REMINDER_SYSTEM_PROMPT = `Anda adalah bot Discord bernama Tulalit yang kocak, asyik, dan suka meroasting/mengingatkan orang yang suka begadang atau overthinking di malam hari.
+
+Tugas Anda:
+Buatkan pesan pengingat tidur/istirahat yang kocak untuk target.
+Aturan:
+1. Sebutkan nama target.
+2. Jika ada nama pengirim yang berbeda, sebutkan bahwa si pengirim yang menyuruh target tidur.
+3. Buat lelucon santai tentang begadang nungguin chat yang gak dibales, scroll reels/tiktok melototin layar, overthinking masa depan, atau kantung mata panda.
+4. Gunakan bahasa Indonesia santai/gaul anak muda yang natural, 2-3 kalimat pendek, dan sertakan emoji yang relevan (😴, 🛏️, 🌙, 💤).
+5. Jangan berikan kata pengantar, langsung berikan teks pesannya.`;
+
+/**
+ * Generates a humorous AI sleep reminder for a target user with Gemini (primary) and Groq fallback.
+ *
+ * @param {string} targetName - Name of the person to be reminded to sleep.
+ * @param {string|null} callerName - Name of the person requesting the reminder (if different from target).
+ * @param {string} [sleepType='Tidur Malam'] - Time context (Tidur Malam, Tidur Siang, Waktunya Bangun).
+ * @returns {Promise<string>} The generated sleep reminder text.
+ */
+export async function generateSleepReminder(targetName, callerName = null, sleepType = 'Tidur Malam') {
+  const isSelf = !callerName || callerName === targetName;
+  const userPrompt = isSelf
+    ? `Buatkan roasting/pengingat untuk ${targetName} agar segera ${sleepType} dan berhenti overthinking / scroll HP.`
+    : `Buatkan roasting/pengingat untuk ${targetName} dari ${callerName} agar segera ${sleepType} dan gak usah begadang nungguin chat yang gak bakal masuk.`;
+
+  // ─── PRIMARY: Try Gemini first ───
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: userPrompt,
+      config: {
+        systemInstruction: `${SLEEP_REMINDER_SYSTEM_PROMPT} Konteks: ${sleepType}.`,
+      },
+    });
+
+    if (response && response.text) {
+      return response.text.trim();
+    }
+
+    throw new Error('Received an empty response from Gemini API.');
+  } catch (geminiError) {
+    console.warn('[AI Service] Gemini failed for /ingattidur. Details:', geminiError.message);
+
+    if (isRateLimitError(geminiError)) {
+      console.log('[AI Service] Gemini rate limited. Switching to Groq fallback...');
+    }
+
+    try {
+      const groqResponse = await groqChat(
+        `${SLEEP_REMINDER_SYSTEM_PROMPT} Konteks: ${sleepType}.`,
+        userPrompt
+      );
+      console.log('[AI Service] Groq fallback succeeded for /ingattidur.');
+      return groqResponse;
+    } catch (groqError) {
+      console.error('[AI Service] Groq fallback also failed. Details:', groqError.message);
+      return isSelf
+        ? `Heh ${targetName}! Udah jam segini masih melototin layar aja. Gak usah overthinking, taruh HP-nya dan buruan ${sleepType} sana! 🌙😴`
+        : `Heh ${targetName}! Disuruh ${sleepType} sama ${callerName} tuh! Gak usah begadang nungguin orang yang udah tidur duluan, merem sana! 🌙😴`;
+    }
+  }
+}
+
+

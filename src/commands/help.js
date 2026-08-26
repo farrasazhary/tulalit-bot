@@ -34,7 +34,15 @@ export const helpCommand = {
         },
         {
           name: '🍽️ /ingatmakan',
-          value: '> Pengingat makan jomblo dengan kata-kata lucu dari AI yang nge-tag kamu.\n> Waktu makan otomatis terdeteksi sesuai jam WIB Jakarta (Sarapan, Makan Siang, Ngemil Sore, Makan Malam).\n> *Contoh:* `/ingatmakan`',
+          value: '> Pengingat makan jomblo dengan kata-kata lucu dari AI yang nge-tag kamu.\n> Waktu otomatis terdeteksi sesuai jam WIB Jakarta.\n> *Contoh:* `/ingatmakan`',
+        },
+        {
+          name: '🚿 /ingatmandi [target]',
+          value: '> Pengingat mandi kocak dari AI yang nyindir kaum bau kasur & gamers.\n> Bisa tag temanmu atau diri sendiri (Otomatis deteksi jam WIB).\n> *Contoh:* `/ingatmandi` atau `/ingatmandi target: @Teman`',
+        },
+        {
+          name: '😴 /ingattidur [target]',
+          value: '> Pengingat tidur & stop begadang dari AI yang nyindir overthinking malam-malam.\n> Bisa tag temanmu atau diri sendiri (Otomatis deteksi jam WIB).\n> *Contoh:* `/ingattidur` atau `/ingattidur target: @Teman`',
         },
         {
           name: 'ℹ️ /about',

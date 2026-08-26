@@ -32,8 +32,8 @@ export const aboutCommand = {
           value: '• Rekap ekspresi & mood mingguan server setiap hari Minggu jam 20:00 WIB.',
         },
         {
-          name: '🍽️ Pengingat Makan Jomblo (`/ingatmakan`)',
-          value: '• Pengingat makan kocak dari AI yang nge-tag kamu sendiri biar gak lupa makan & gak cuma makan ati 💔.\n• Otomatis mendeteksi waktu makan sesuai jam WIB (Sarapan, Makan Siang, Ngemil, Makan Malam).',
+          name: '🍽️ Trio Pengingat Kocak (`/ingatmakan`, `/ingatmandi`, `/ingattidur`)',
+          value: '• Pengingat makan, mandi, dan tidur dari AI dengan roasting kocak & hangat.\n• Otomatis mendeteksi waktu WIB Jakarta & bisa tag temanmu atau dirimu sendiri!',
         }
       )
       .setFooter({ text: 'Tulalit Bot • Ketik /help untuk panduan perintah lengkap' })

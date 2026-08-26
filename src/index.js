@@ -7,6 +7,8 @@ import { confessCommand } from './commands/confess.js';
 import { helpCommand } from './commands/help.js';
 import { aboutCommand } from './commands/about.js';
 import { ingatmakanCommand } from './commands/ingatmakan.js';
+import { ingatmandiCommand } from './commands/ingatmandi.js';
+import { ingattidurCommand } from './commands/ingattidur.js';
 import { startWeeklyMoodJob } from './jobs/weeklyMoodReport.js';
 import { startWebServer } from './services/webServer.js';
 
@@ -36,6 +38,8 @@ commands.set(confessCommand.data.name, confessCommand);
 commands.set(helpCommand.data.name, helpCommand);
 commands.set(aboutCommand.data.name, aboutCommand);
 commands.set(ingatmakanCommand.data.name, ingatmakanCommand);
+commands.set(ingatmandiCommand.data.name, ingatmandiCommand);
+commands.set(ingattidurCommand.data.name, ingattidurCommand);
 
 // Per-user cooldown map (3 seconds cooldown)
 const cooldowns = new Map();
