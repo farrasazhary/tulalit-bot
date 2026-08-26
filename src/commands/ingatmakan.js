@@ -32,20 +32,7 @@ const MEAL_CONFIG = {
 export const ingatmakanCommand = {
   data: new SlashCommandBuilder()
     .setName('ingatmakan')
-    .setDescription('Pengingat makan jomblo dengan kata-kata lucu dari AI (men-tag kamu sendiri)')
-    .addStringOption((option) =>
-      option
-        .setName('waktu')
-        .setDescription('Pilih waktu makan (Default: otomatis sesuai jam WIB Jakarta)')
-        .setRequired(false)
-        .addChoices(
-          { name: '🍳 Sarapan Pagi', value: 'Sarapan' },
-          { name: '🍜 Makan Siang', value: 'Makan Siang' },
-          { name: '🍿 Ngemil Sore', value: 'Ngemil Sore' },
-          { name: '🍛 Makan Malam', value: 'Makan Malam' },
-          { name: '🌙 Makan Tengah Malam', value: 'Makan Tengah Malam' }
-        )
-    ),
+    .setDescription('Pengingat makan jomblo dengan kata-kata lucu dari AI — otomatis sesuai jam WIB!'),
 
   /**
    * Executes the /ingatmakan command.
@@ -56,8 +43,7 @@ export const ingatmakanCommand = {
     // Defer reply as AI generation might take 1-3 seconds
     await interaction.deferReply();
 
-    const selectedMeal = interaction.options.getString('waktu');
-    const mealType = selectedMeal || getJakartaMealType();
+    const mealType = getJakartaMealType();
     const config = MEAL_CONFIG[mealType] || { icon: '🍽️', label: mealType };
 
     // Get user's display name or username
