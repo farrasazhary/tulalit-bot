@@ -71,14 +71,20 @@ export async function generateMealReminder(userName, mealType = 'Makan Siang') {
   }
 }
 
-const BATH_REMINDER_SYSTEM_PROMPT = `Anda adalah bot Discord bernama Tulalit yang kocak, asyik, dan suka meroasting/mengingatkan orang yang malas mandi dengan cara yang lucu, menghibur, dan ramah.
+const BATH_REMINDER_SYSTEM_PROMPT = `Anda adalah bot Discord bernama Tulalit yang kocak, asyik, dan suka meroasting/mengingatkan orang agar mandi dengan cara yang lucu, variatif, menghibur, dan ramah.
 
 Tugas Anda:
 Buatkan pesan pengingat mandi yang kocak untuk target.
 Aturan:
 1. Sebutkan nama target.
-2. Jika ada nama pengirim yang berbeda, sebutkan bahwa si pengirim yang meminta atau yang mencium aroma malas mandi si target.
-3. Buat lelucon santai tentang bau kasur, keringat push rank, bau matahari, sabunan yang bersih, atau air segar.
+2. Jika ada nama pengirim yang berbeda, sebutkan bahwa si pengirim yang meminta atau menyuruh target mandi.
+3. Variasikan topik sindirannya secara acak dan kreatif dari situasi sehari-hari yang umum (JANGAN HANYA SOAL GAME), misalnya:
+   - Nempel di kasur / mager seharian
+   - Bau matahari atau debu jalanan
+   - Gerah karena cuaca panas / keringetan
+   - Seharian nugas / kerja / scrolling sosmed sampai lecek
+   - Biar wangi semerbak, auranya kebuka, dan daki rontok
+   - Sabunan busa melimpah biar segar dan glowing
 4. Gunakan bahasa Indonesia santai/gaul anak muda yang natural, 2-3 kalimat pendek, dan sertakan emoji yang relevan (🚿, 🧼, 🛁).
 5. Jangan berikan kata pengantar, langsung berikan teks pesannya.`;
 
@@ -93,8 +99,8 @@ Aturan:
 export async function generateBathReminder(targetName, callerName = null, bathType = 'Mandi Sore') {
   const isSelf = !callerName || callerName === targetName;
   const userPrompt = isSelf
-    ? `Buatkan roasting/pengingat untuk ${targetName} agar segera ${bathType} karena sudah mager dan bau kasur.`
-    : `Buatkan roasting/pengingat untuk ${targetName} dari ${callerName} agar segera ${bathType} karena aroma push rank-nya udah kecium.`;
+    ? `Buatkan roasting/pengingat mandi yang lucu, santai, dan bervariasi untuk ${targetName} agar segera ${bathType}.`
+    : `Buatkan roasting/pengingat mandi yang lucu, santai, dan bervariasi untuk ${targetName} dari ${callerName} agar segera ${bathType}.`;
   const systemInstruction = `${BATH_REMINDER_SYSTEM_PROMPT} Konteks: ${bathType}.`;
 
   // ─── PRIMARY: Try Gemini Key Pool first ───
@@ -112,7 +118,7 @@ export async function generateBathReminder(targetName, callerName = null, bathTy
       console.error('[AI Service] Groq pool also failed. Details:', groqError.message);
       return isSelf
         ? `Woy ${targetName}! Kasur lo udah mulai lengket tuh dari tadi rebahan mulu. Buruan ${bathType} sana biar wangi dan segeran dikit! 🧼🚿`
-        : `Woy ${targetName}! Kata ${callerName} aroma push rank dan kasur lo udah kecium sampe sini. Buruan ${bathType} sana, sabunan yang bersih! 🧼🚿`;
+        : `Woy ${targetName}! Kata ${callerName} badan lo udah mulai lecek tuh. Buruan ${bathType} sana, sabunan yang bersih biar seger & wangi! 🧼🚿`;
     }
   }
 }

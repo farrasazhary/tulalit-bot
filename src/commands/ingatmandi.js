@@ -91,8 +91,8 @@ export const ingatmandiCommand = {
       console.error('[IngatMandi Command Error]:', error);
       await interaction.editReply({
         content: isSelf
-          ? `Woy <@${targetUser.id}>! Badan lo udah mulai bau kasur tuh, buruan ${bathType} sana! 🧼🚿`
-          : `Woy <@${targetUser.id}>! Kata ${callerDisplayName} aroma push rank lo udah kecium, buruan ${bathType} sana! 🧼🚿`,
+          ? `Woy <@${targetUser.id}>! Badan lo udah mulai lecek tuh dari tadi, buruan ${bathType} sana biar seger & wangi! 🧼🚿`
+          : `Woy <@${targetUser.id}>! Kata ${callerDisplayName} badan lo udah mulai lecek tuh, buruan ${bathType} sana biar seger & wangi! 🧼🚿`,
       });
     }
   },
