@@ -1,7 +1,7 @@
 import { GROQ_API_KEY } from '../config/env.js';
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_MODEL = 'llama-3.3-70b-versatile';
+const GROQ_MODEL = 'openai/gpt-oss-120b';
 
 /**
  * Sends a chat completion request to the Groq API using native fetch.

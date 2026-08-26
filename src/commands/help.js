@@ -37,6 +37,10 @@ export const helpCommand = {
           value: '> Download video **TikTok** (tanpa watermark), **Instagram Reels**, **Facebook**, atau **Twitter**.\n> 💡 *Video <= 25MB diputar langsung di chat Discord. Video > 25MB / server sibuk disajikan via tombol Download HD.*\n> *Contoh:* `/download url: https://vt.tiktok.com/...`',
         },
         {
+          name: '🍽️ /ingatmakan [waktu]',
+          value: '> Pengingat makan jomblo dengan kata-kata lucu dari AI (men-tag kamu sendiri).\n> Pilihan waktu: Sarapan, Makan Siang, Ngemil, Makan Malam, dll (Otomatis deteksi jam WIB jika dikosongkan).\n> *Contoh:* `/ingatmakan` atau `/ingatmakan waktu: Makan Siang`',
+        },
+        {
           name: 'ℹ️ /about',
           value: '> Tampilkan informasi pengenal & mengenai bot Tulalit.',
         },

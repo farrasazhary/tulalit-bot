@@ -63,3 +63,62 @@ export async function generateMotivation(theme = 'kerja keras dan disiplin') {
     }
   }
 }
+
+const MEAL_REMINDER_SYSTEM_PROMPT = `Anda adalah bot Discord bernama Tulalit yang kocak, asyik, dan suka menyindir para jomblo dengan cara yang lucu, menghibur, dan tetap penuh perhatian.
+
+Tugas Anda:
+Buatkan pesan pengingat makan untuk pengguna (jomblo).
+Aturan:
+1. Sebutkan nama mereka (atau sapaan akrab).
+2. Buat lelucon santai / sindiran lucu tentang status jomblo mereka (misal: gak ada pacar yang ngingetin makan, jangan cuma makan ati/harapan kosong, butuh energi buat nge-crush yang gak peka, dsb).
+3. Ingatkan untuk menikmati waktu makan tersebut dengan baik.
+4. Gunakan bahasa Indonesia santai/gaul anak muda yang natural, 2-3 kalimat pendek, dan sertakan emoji yang relevan.
+5. Jangan berikan kata pengantar, langsung berikan teks pesannya.`;
+
+/**
+ * Generates a humorous AI meal reminder teasing the single user with Gemini (primary) and Groq fallback.
+ *
+ * @param {string} userName - The name of the user who called the command.
+ * @param {string} [mealType='Makan Siang'] - The meal time context (Sarapan, Makan Siang, Makan Malam, Ngemil, etc.).
+ * @returns {Promise<string>} The generated meal reminder text.
+ */
+export async function generateMealReminder(userName, mealType = 'Makan Siang') {
+  const userPrompt = `Buatkan pengingat untuk ${userName} agar segera ${mealType}.`;
+
+  // ─── PRIMARY: Try Gemini first ───
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: userPrompt,
+      config: {
+        systemInstruction: `${MEAL_REMINDER_SYSTEM_PROMPT} Waktu makan: ${mealType}.`,
+      },
+    });
+
+    if (response && response.text) {
+      return response.text.trim();
+    }
+
+    throw new Error('Received an empty response from Gemini API.');
+  } catch (geminiError) {
+    console.warn('[AI Service] Gemini failed for /ingatmakan. Details:', geminiError.message);
+
+    // ─── FALLBACK: Switch to Groq if Gemini fails ───
+    if (isRateLimitError(geminiError)) {
+      console.log('[AI Service] Gemini rate limited. Switching to Groq fallback...');
+    }
+
+    try {
+      const groqResponse = await groqChat(
+        `${MEAL_REMINDER_SYSTEM_PROMPT} Waktu makan: ${mealType}.`,
+        userPrompt
+      );
+      console.log('[AI Service] Groq fallback succeeded for /ingatmakan.');
+      return groqResponse;
+    } catch (groqError) {
+      console.error('[AI Service] Groq fallback also failed. Details:', groqError.message);
+      return `Woy ${userName}! Gak ada ayang yang ngingetin bukan berarti boleh skip ${mealType} ya. Buruan makan sana, jangan cuma makan ati! 🍜💔`;
+    }
+  }
+}
+
