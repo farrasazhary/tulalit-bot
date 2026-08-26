@@ -32,7 +32,7 @@ const MEAL_CONFIG = {
 export const ingatmakanCommand = {
   data: new SlashCommandBuilder()
     .setName('ingatmakan')
-    .setDescription('Pengingat makan jomblo dengan kata-kata lucu dari AI — otomatis sesuai jam WIB!'),
+    .setDescription('Pengingat makan buat lo semua wok'),
 
   /**
    * Executes the /ingatmakan command.

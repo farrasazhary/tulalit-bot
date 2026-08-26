@@ -33,10 +33,6 @@ export const helpCommand = {
           value: '> Setiap pagi jam 07:00 WIB, Tulalit mengirim quotes harian dengan 4 emoji reaksi.\n> Klik emoji yang sesuai mood kamu: 😊 😐 😢 😡\n> Setiap **Minggu malam jam 20:00**, Tulalit akan merangkum mood mingguan server!',
         },
         {
-          name: '🎬 /download <url>',
-          value: '> Download video **TikTok** (tanpa watermark), **Instagram Reels**, **Facebook**, atau **Twitter**.\n> 💡 *Video <= 25MB diputar langsung di chat Discord. Video > 25MB / server sibuk disajikan via tombol Download HD.*\n> *Contoh:* `/download url: https://vt.tiktok.com/...`',
-        },
-        {
           name: '🍽️ /ingatmakan',
           value: '> Pengingat makan jomblo dengan kata-kata lucu dari AI yang nge-tag kamu.\n> Waktu makan otomatis terdeteksi sesuai jam WIB Jakarta (Sarapan, Makan Siang, Ngemil Sore, Makan Malam).\n> *Contoh:* `/ingatmakan`',
         },

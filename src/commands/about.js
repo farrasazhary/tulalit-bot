@@ -32,8 +32,8 @@ export const aboutCommand = {
           value: '• Rekap ekspresi & mood mingguan server setiap hari Minggu jam 20:00 WIB.',
         },
         {
-          name: '🎬 Social Media Downloader (`/download`)',
-          value: '• **Video <= 25MB**: Otomatis di-stream & di-upload langsung di chat Discord agar bisa diputar langsung.\n• **Video > 25MB / Server Sibuk**: Disajikan berupa tombol **Download HD** menuju video beresolusi tinggi.',
+          name: '🍽️ Pengingat Makan Jomblo (`/ingatmakan`)',
+          value: '• Pengingat makan kocak dari AI yang nge-tag kamu sendiri biar gak lupa makan & gak cuma makan ati 💔.\n• Otomatis mendeteksi waktu makan sesuai jam WIB (Sarapan, Makan Siang, Ngemil, Makan Malam).',
         }
       )
       .setFooter({ text: 'Tulalit Bot • Ketik /help untuk panduan perintah lengkap' })

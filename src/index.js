@@ -5,7 +5,6 @@ import { motivasiCommand } from './commands/motivasi.js';
 import { curhatCommand } from './commands/curhat.js';
 import { confessCommand } from './commands/confess.js';
 import { helpCommand } from './commands/help.js';
-import { downloadCommand } from './commands/download.js';
 import { aboutCommand } from './commands/about.js';
 import { ingatmakanCommand } from './commands/ingatmakan.js';
 import { startWeeklyMoodJob } from './jobs/weeklyMoodReport.js';
@@ -27,9 +26,6 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildMessageReactions,
   ],
-  rest: {
-    timeout: 60000, // Increase REST request timeout to 60s for video file uploads
-  },
 });
 
 // Map to store registered slash commands
@@ -38,7 +34,6 @@ commands.set(motivasiCommand.data.name, motivasiCommand);
 commands.set(curhatCommand.data.name, curhatCommand);
 commands.set(confessCommand.data.name, confessCommand);
 commands.set(helpCommand.data.name, helpCommand);
-commands.set(downloadCommand.data.name, downloadCommand);
 commands.set(aboutCommand.data.name, aboutCommand);
 commands.set(ingatmakanCommand.data.name, ingatmakanCommand);
 
