@@ -1,9 +1,5 @@
-import { GoogleGenAI } from '@google/genai';
-import { AI_API_KEY } from '../config/env.js';
+import { geminiGenerate } from './geminiService.js';
 import { groqChat } from './groqService.js';
-
-// Initialize the Google Gen AI client with the validated API key
-const ai = new GoogleGenAI({ apiKey: AI_API_KEY });
 
 const CURHAT_SYSTEM_PROMPT = `Anda adalah teman curhat yang sangat hangat, berempati tinggi, peka, dan bijaksana bernama Tulalit. 
 
@@ -18,44 +14,30 @@ Gunakan bahasa Indonesia yang santun, luwes, bersahabat, dan menyejukkan hati. J
 Tanggapi curhatan mereka secara langsung tanpa basa-basi pengantar seperti "Tentu, ini tanggapannya:". Posisikan diri Anda sebagai sahabat yang selalu ada untuk mereka.`;
 
 /**
- * Generates an empathetic response using Gemini (primary) with Groq fallback.
- * If Gemini hits rate limit (429), automatically switches to Groq.
+ * Generates an empathetic response using Gemini Multi-Key Pool with Groq Multi-Key fallback.
  *
  * @param {string} userMessage - The user's vent/curhat text.
  * @returns {Promise<string>} The empathetic AI response.
  */
 export async function generateCurhatResponse(userMessage) {
-  // ─── PRIMARY: Try Gemini first ───
+  // ─── PRIMARY: Try Gemini Key Pool first ───
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: userMessage,
-      config: {
-        systemInstruction: CURHAT_SYSTEM_PROMPT,
-      },
+    return await geminiGenerate({
+      userPrompt: userMessage,
+      systemInstruction: CURHAT_SYSTEM_PROMPT,
     });
-
-    if (response && response.text) {
-      return response.text.trim();
-    }
-
-    throw new Error('Received an empty response from Gemini API for curhat.');
   } catch (geminiError) {
-    console.warn('[Curhat Service] Gemini failed for /curhat. Details:', geminiError.message);
+    console.warn('[Curhat Service] Gemini pool failed for /curhat. Switching to Groq pool...', geminiError.message);
 
-    // ─── FALLBACK: Switch to Groq ───
-    const msg = String(geminiError?.message || '').toLowerCase();
-    if (msg.includes('429') || msg.includes('resource_exhausted') || msg.includes('quota')) {
-      console.log('[Curhat Service] Gemini rate limited. Switching to Groq fallback...');
-    }
-
+    // ─── FALLBACK: Switch to Groq Key Pool ───
     try {
       const groqResponse = await groqChat(CURHAT_SYSTEM_PROMPT, userMessage);
       console.log('[Curhat Service] Groq fallback succeeded for /curhat.');
       return groqResponse;
     } catch (groqError) {
-      console.error('[Curhat Service] Groq fallback also failed. Details:', groqError.message);
+      console.error('[Curhat Service] Groq pool also failed. Details:', groqError.message);
       return 'Terima kasih banyak sudah mau berbagi cerita denganku. Aku tahu hari-harimu mungkin sedang terasa sangat berat, dan aku di sini untuk mendengarkanmu. Semoga beban di hatimu lekas mereda, ya. Kamu tidak sendirian. 💙';
     }
   }
 }
+
