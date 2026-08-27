@@ -66,11 +66,7 @@ export const ingattidurCommand = {
     const icon = SLEEP_ICONS[sleepType] || '🌙';
 
     try {
-      const reminderText = await generateSleepReminder(
-        targetDisplayName,
-        isSelf ? null : callerDisplayName,
-        sleepType
-      );
+      const reminderText = await generateSleepReminder(targetDisplayName, sleepType);
 
       const embed = new EmbedBuilder()
         .setColor('#5F27CD') // Night Purple
@@ -90,9 +86,7 @@ export const ingattidurCommand = {
     } catch (error) {
       console.error('[IngatTidur Command Error]:', error);
       await interaction.editReply({
-        content: isSelf
-          ? `Woy <@${targetUser.id}>! Udah jam segini masih melototin HP aja, taruh HP-nya dan buruan ${sleepType} sana! 🌙😴`
-          : `Woy <@${targetUser.id}>! Disuruh ${sleepType} sama ${callerDisplayName} tuh, gak usah begadang nungguin chat yang gak bakal dibales! 🌙😴`,
+        content: `Woy <@${targetUser.id}>! Udah jam segini masih melototin HP aja. Gak usah overthinking nungguin yang gak pasti, taruh HP-nya dan buruan ${sleepType} sana! 🌙😴`,
       });
     }
   },

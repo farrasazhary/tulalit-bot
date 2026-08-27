@@ -71,14 +71,14 @@ export async function generateMealReminder(userName, mealType = 'Makan Siang') {
   }
 }
 
-const BATH_REMINDER_SYSTEM_PROMPT = `Anda adalah bot Discord bernama Tulalit yang kocak, asyik, dan suka meroasting/mengingatkan orang agar mandi dengan cara yang lucu, variatif, menghibur, dan ramah.
+const BATH_REMINDER_SYSTEM_PROMPT = `Anda adalah bot Discord bernama Tulalit yang kocak, asyik, dan suka meroasting/mengingatkan orang agar mandi secara langsung dengan cara yang lucu, variatif, menghibur, dan ramah.
 
 Tugas Anda:
 Buatkan pesan pengingat mandi yang kocak untuk target.
 Aturan:
-1. Sebutkan nama target.
-2. Jika ada nama pengirim yang berbeda, sebutkan bahwa si pengirim yang meminta atau menyuruh target mandi.
-3. Variasikan topik sindirannya secara acak dan kreatif dari situasi sehari-hari yang umum (JANGAN HANYA SOAL GAME), misalnya:
+1. Sebutkan nama target secara langsung di awal pesan.
+2. JANGAN PERNAH menyebutkan siapa pengirim yang menyuruh atau kata-kata seperti "kata si A", "disuruh si B", dsb. Posisikan bot Tulalit berbicara LANGSUNG ke target.
+3. Variasikan topik sindirannya secara acak dan kreatif dari situasi sehari-hari yang umum:
    - Nempel di kasur / mager seharian
    - Bau matahari atau debu jalanan
    - Gerah karena cuaca panas / keringetan
@@ -89,18 +89,14 @@ Aturan:
 5. Jangan berikan kata pengantar, langsung berikan teks pesannya.`;
 
 /**
- * Generates a humorous AI bath reminder for a target user using Gemini Pool with Groq Fallback.
+ * Generates a humorous AI bath reminder addressing the target user directly.
  *
  * @param {string} targetName - Name of the person to be reminded to take a bath.
- * @param {string|null} callerName - Name of the person requesting the reminder (if different from target).
  * @param {string} [bathType='Mandi Sore'] - Time context (Mandi Pagi, Mandi Sore, Mandi Malam).
  * @returns {Promise<string>} The generated bath reminder text.
  */
-export async function generateBathReminder(targetName, callerName = null, bathType = 'Mandi Sore') {
-  const isSelf = !callerName || callerName === targetName;
-  const userPrompt = isSelf
-    ? `Buatkan roasting/pengingat mandi yang lucu, santai, dan bervariasi untuk ${targetName} agar segera ${bathType}.`
-    : `Buatkan roasting/pengingat mandi yang lucu, santai, dan bervariasi untuk ${targetName} dari ${callerName} agar segera ${bathType}.`;
+export async function generateBathReminder(targetName, bathType = 'Mandi Sore') {
+  const userPrompt = `Buatkan roasting dan pengingat mandi yang lucu, langsung ditujukan ke ${targetName} agar segera ${bathType}. Jangan sebutkan perantara siapapun.`;
   const systemInstruction = `${BATH_REMINDER_SYSTEM_PROMPT} Konteks: ${bathType}.`;
 
   // ─── PRIMARY: Try Gemini Key Pool first ───
@@ -116,37 +112,31 @@ export async function generateBathReminder(targetName, callerName = null, bathTy
       return groqResponse;
     } catch (groqError) {
       console.error('[AI Service] Groq pool also failed. Details:', groqError.message);
-      return isSelf
-        ? `Woy ${targetName}! Kasur lo udah mulai lengket tuh dari tadi rebahan mulu. Buruan ${bathType} sana biar wangi dan segeran dikit! 🧼🚿`
-        : `Woy ${targetName}! Kata ${callerName} badan lo udah mulai lecek tuh. Buruan ${bathType} sana, sabunan yang bersih biar seger & wangi! 🧼🚿`;
+      return `Woy ${targetName}! Badan lo udah mulai lecek tuh dari tadi nempel di kasur mulu. Buruan ${bathType} sana, sabunan yang bersih biar seger & wangi semerbak! 🧼🚿`;
     }
   }
 }
 
-const SLEEP_REMINDER_SYSTEM_PROMPT = `Anda adalah bot Discord bernama Tulalit yang kocak, asyik, dan suka meroasting/mengingatkan orang yang suka begadang atau overthinking di malam hari.
+const SLEEP_REMINDER_SYSTEM_PROMPT = `Anda adalah bot Discord bernama Tulalit yang kocak, asyik, dan suka meroasting/mengingatkan orang agar tidur atau istirahat secara langsung.
 
 Tugas Anda:
 Buatkan pesan pengingat tidur/istirahat yang kocak untuk target.
 Aturan:
-1. Sebutkan nama target.
-2. Jika ada nama pengirim yang berbeda, sebutkan bahwa si pengirim yang menyuruh target tidur.
-3. Buat lelucon santai tentang begadang nungguin chat yang gak dibales, scroll reels/tiktok melototin layar, overthinking masa depan, atau kantung mata panda.
+1. Sebutkan nama target secara langsung di awal pesan.
+2. JANGAN PERNAH menyebutkan siapa pengirim yang menyuruh atau kata-kata seperti "kata si A", "disuruh si B", dsb. Posisikan bot Tulalit berbicara LANGSUNG ke target.
+3. Buat lelucon santai tentang begadang (nungguin chat yang gak bakal dibales, scroll reels/tiktok melototin layar sampai mata panda, overthinking masa depan, dll).
 4. Gunakan bahasa Indonesia santai/gaul anak muda yang natural, 2-3 kalimat pendek, dan sertakan emoji yang relevan (😴, 🛏️, 🌙, 💤).
 5. Jangan berikan kata pengantar, langsung berikan teks pesannya.`;
 
 /**
- * Generates a humorous AI sleep reminder for a target user using Gemini Pool with Groq Fallback.
+ * Generates a humorous AI sleep reminder addressing the target user directly.
  *
  * @param {string} targetName - Name of the person to be reminded to sleep.
- * @param {string|null} callerName - Name of the person requesting the reminder (if different from target).
  * @param {string} [sleepType='Tidur Malam'] - Time context (Tidur Malam, Tidur Siang, Waktunya Bangun).
  * @returns {Promise<string>} The generated sleep reminder text.
  */
-export async function generateSleepReminder(targetName, callerName = null, sleepType = 'Tidur Malam') {
-  const isSelf = !callerName || callerName === targetName;
-  const userPrompt = isSelf
-    ? `Buatkan roasting/pengingat untuk ${targetName} agar segera ${sleepType} dan berhenti overthinking / scroll HP.`
-    : `Buatkan roasting/pengingat untuk ${targetName} dari ${callerName} agar segera ${sleepType} dan gak usah begadang nungguin chat yang gak bakal masuk.`;
+export async function generateSleepReminder(targetName, sleepType = 'Tidur Malam') {
+  const userPrompt = `Buatkan roasting dan pengingat tidur yang lucu, langsung ditujukan ke ${targetName} agar segera ${sleepType}. Jangan sebutkan perantara siapapun.`;
   const systemInstruction = `${SLEEP_REMINDER_SYSTEM_PROMPT} Konteks: ${sleepType}.`;
 
   // ─── PRIMARY: Try Gemini Key Pool first ───
@@ -162,12 +152,11 @@ export async function generateSleepReminder(targetName, callerName = null, sleep
       return groqResponse;
     } catch (groqError) {
       console.error('[AI Service] Groq pool also failed. Details:', groqError.message);
-      return isSelf
-        ? `Heh ${targetName}! Udah jam segini masih melototin layar aja. Gak usah overthinking, taruh HP-nya dan buruan ${sleepType} sana! 🌙😴`
-        : `Heh ${targetName}! Disuruh ${sleepType} sama ${callerName} tuh! Gak usah begadang nungguin orang yang udah tidur duluan, merem sana! 🌙😴`;
+      return `Heh ${targetName}! Udah jam segini masih melototin layar HP aja. Gak usah overthinking nungguin yang gak pasti, taruh HP-nya dan buruan ${sleepType} sana! 🌙😴`;
     }
   }
 }
+
 
 
 

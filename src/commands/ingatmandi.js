@@ -66,11 +66,7 @@ export const ingatmandiCommand = {
     const icon = BATH_ICONS[bathType] || '🚿';
 
     try {
-      const reminderText = await generateBathReminder(
-        targetDisplayName,
-        isSelf ? null : callerDisplayName,
-        bathType
-      );
+      const reminderText = await generateBathReminder(targetDisplayName, bathType);
 
       const embed = new EmbedBuilder()
         .setColor('#00D2D3') // Fresh Aqua Cyan
@@ -90,9 +86,7 @@ export const ingatmandiCommand = {
     } catch (error) {
       console.error('[IngatMandi Command Error]:', error);
       await interaction.editReply({
-        content: isSelf
-          ? `Woy <@${targetUser.id}>! Badan lo udah mulai lecek tuh dari tadi, buruan ${bathType} sana biar seger & wangi! 🧼🚿`
-          : `Woy <@${targetUser.id}>! Kata ${callerDisplayName} badan lo udah mulai lecek tuh, buruan ${bathType} sana biar seger & wangi! 🧼🚿`,
+        content: `Woy <@${targetUser.id}>! Badan lo udah mulai lecek tuh nempel di kasur mulu, buruan ${bathType} sana biar seger & wangi semerbak! 🧼🚿`,
       });
     }
   },
